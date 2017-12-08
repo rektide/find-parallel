@@ -2,31 +2,37 @@
 "use strict"
 var
   fs=require( "fs"),
-  path= require( "path"),
-  util= require( "util"),
-  readdir= util.promisify( fs.readdir)
+  path= require( "path")
 
 var
   inflight= 0,
-  outputBuffer= []
+  outputBuffer= [],
+  doOutput= process.env.OUTPUT!== "0"
 
 function scan( target){
-	outputBuffer.push( target)
-	function recurse( files){
-		--inflight
-		for( var file of files){
-			scan( path.join( target, file))
-		}
-	}
-	function fail(){
-		--inflight
-	}
-	readdir( target).then( recurse, fail)
 	++inflight
+	doOutput&& outputBuffer.push( target)
+	fs.readdir( target, function(err, files){
+		--inflight
+		if( !files){
+			return
+		}
+		files.forEach(function( file){
+			var next= path.join( target, file)
+			fs.stat( next, function(err, stats){
+				if( stats&& stats.isDirectory()){
+					scan( next)
+				}else{
+					doOutput&& outputBuffer.push( next)
+				}
+			})
+		})
+	})
 }
 process.on("unhandledRejection", ()=> null)
 
 setInterval(function(){
+	console.error({inflight})
 	if( outputBuffer.length){
 		console.log( outputBuffer.join("\n"))
 		outputBuffer= []
