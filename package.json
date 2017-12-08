@@ -1,0 +1,13 @@
+{
+	"name": "find-parallel",
+	"version": "1.0.0",
+	"description": "Highly parallel find all all files",
+	"main": "find-parallel.js",
+	"scripts": {
+		"run": "UV_THREADPOOL_SIZE=96 ./find-parallel.js"
+	},
+	"bin": "./find-parallel",
+	"keywords": ["find"],
+	"author": "rektide de la faye",
+	"license": "MIT"
+}
